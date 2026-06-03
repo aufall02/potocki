@@ -35,7 +35,7 @@
 
 ---
 
-A self-hosted, minimal **file drop** service. Files are encrypted with **AES-256-CBC**, compressed with **xz**, and automatically expire. Built for cheap VPS — runs comfortably on a $0/month free-tier AWS EC2 instance with **<20MB RAM** idle.
+A self-hosted, minimal **file drop** service. Files are encrypted with **AES-256-CBC**, compressed with **xz**, and automatically expire. Built for cheap VPS — runs comfortably on a $0/month free-tier AWS EC2 instance with **~50MB RAM** idle (Node.js baseline).
 
 The **Go client** handles decryption and decompression locally, so the server never has to do expensive work on download. Bandwidth stays minimal — only the compressed+encrypted file leaves the server.
 

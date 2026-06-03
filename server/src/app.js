@@ -18,12 +18,14 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:' + PORT;
 
 let indexHtml = '';
 let downloadTemplate = '';
+let tosHtml = '';
 
 function loadTemplates() {
   try {
     const indexTpl = fs.readFileSync(path.join(VIEWS_DIR, 'index.ejs'), 'utf8');
     indexHtml = ejs.render(indexTpl, { version: VERSION, baseUrl: BASE_URL });
     downloadTemplate = fs.readFileSync(path.join(VIEWS_DIR, 'download.ejs'), 'utf8');
+    tosHtml = ejs.render(fs.readFileSync(path.join(VIEWS_DIR, 'tos.ejs'), 'utf8'), {});
   } catch (err) {
     console.error('[app] failed to load templates:', err.message);
     indexHtml = '<h1>potocki - template load error</h1>';
@@ -55,6 +57,14 @@ function handleUI(res) {
     res.writeStatus('200 OK');
     res.writeHeader('Content-Type', 'text/html; charset=utf-8');
     res.end(indexHtml);
+  });
+}
+
+function handleTos(res) {
+  res.cork(() => {
+    res.writeStatus('200 OK');
+    res.writeHeader('Content-Type', 'text/html; charset=utf-8');
+    res.end(tosHtml);
   });
 }
 
@@ -143,6 +153,7 @@ async function start() {
     .get('/api/stats', handleStats)
     .get('/bin', handleClientDownload)
     .post('/upload', handleUpload)
+    .get('/tos', handleTos)
     .any('/*', (res) => {
       res.writeStatus('404 Not Found');
       res.end('not found');

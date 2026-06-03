@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>potocki :: terms of service</title>
+<style>
+  :root {
+    --brand: #cc4a2c;
+    --brand-dark: #b33e22;
+    --text-main: #333333;
+    --text-muted: #666666;
+    --bg-main: #f8f9fa;
+    --bg-card: #ffffff;
+    --border: #e0e0e0;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--sans); color: var(--text-main); background: var(--bg-main); line-height: 1.7; min-height: 100vh; }
+  .navbar { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background: var(--brand); color: #fff; }
+  .navbar .logo { font-size: 1.5em; font-weight: 700; text-decoration: none; color: #fff; }
+  .container { max-width: 800px; margin: 60px auto; padding: 0 20px; }
+  .card { background: var(--bg-card); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--border); padding: 40px; }
+  h1 { font-size: 2em; font-weight: 800; margin-bottom: 30px; color: var(--brand-dark); }
+  h2 { font-size: 1.2em; font-weight: 700; margin: 30px 0 10px; color: var(--text-main); }
+  p, li { color: var(--text-muted); margin-bottom: 12px; }
+  ul { padding-left: 20px; margin-bottom: 20px; }
+  a { color: var(--brand); text-decoration: none; font-weight: 600; }
+  a:hover { text-decoration: underline; }
+  footer { text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.9em; border-top: 1px solid var(--border); margin-top: 60px; background: #fff; }
+  @media (max-width: 600px) { .navbar { padding: 15px 20px; } .card { padding: 25px; } }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="navbar">
+  <a href="/" class="logo">potocki</a>
+</div>
+
+<div class="container">
+  <div class="card">
+    <h1>Terms of Service</h1>
+    <p><strong>Last updated:</strong> June 2026</p>
+
+    <h2>1. Acceptance of Terms</h2>
+    <p>By using potocki ("the Service"), you agree to these Terms of Service. If you do not agree, do not use the Service.</p>
+
+    <h2>2. Description of Service</h2>
+    <p>potocki is a self-hosted, temporary file-sharing service. Files uploaded to the Service are encrypted, compressed, and automatically deleted after 7 days or upon reaching their bandwidth quota — whichever comes first.</p>
+
+    <h2>3. User Responsibilities</h2>
+    <ul>
+      <li>You are solely responsible for the content of files you upload.</li>
+      <li>You agree not to upload any content that is illegal, infringes on intellectual property rights, or violates applicable laws.</li>
+      <li>You are responsible for safeguarding download tokens and URLs. Anyone with both the URL and token can access your file.</li>
+    </ul>
+
+    <h2>4. Prohibited Content</h2>
+    <p>The following types of content are strictly prohibited:</p>
+    <ul>
+      <li>Malware, viruses, or any malicious code</li>
+      <li>Content that violates copyright or intellectual property laws</li>
+      <li>Illegal material under applicable jurisdiction</li>
+      <li>Content that promotes violence, harassment, or hate speech</li>
+    </ul>
+
+    <h2>5. Data Retention & Privacy</h2>
+    <ul>
+      <li>Files are encrypted with AES-256-CBC before storage. The server does not have access to plaintext file contents without the decryption key.</li>
+      <li>All files are automatically deleted after 7 days or upon reaching their bandwidth quota.</li>
+      <li>We do not sell, share, or analyze uploaded file contents.</li>
+      <li>No user tracking or analytics are employed.</li>
+      <li>Server logs may contain IP addresses for rate limiting and abuse prevention purposes.</li>
+    </ul>
+
+    <h2>6. Disclaimer of Warranty</h2>
+    <p>The Service is provided "as is" and "as available" without any warranty of any kind. We do not guarantee uninterrupted access, error-free operation, or the security of data in transit beyond the encryption mechanisms described.</p>
+
+    <h2>7. Limitation of Liability</h2>
+    <p>To the fullest extent permitted by law, the Service operator shall not be liable for any direct, indirect, incidental, or consequential damages arising from the use or inability to use the Service, including but not limited to data loss or unauthorized access.</p>
+
+    <h2>8. Changes to Terms</h2>
+    <p>We reserve the right to modify these Terms at any time. Continued use of the Service after changes constitutes acceptance of the new Terms.</p>
+
+    <h2>9. Contact</h2>
+    <p>For questions about these Terms, open an issue at <a href="https://github.com/aufall02/potocki/issues" target="_blank" rel="noopener noreferrer">github.com/aufall02/potocki/issues</a>.</p>
+  </div>
+</div>
+
+<footer>
+  <a href="/">&larr; Back to potocki</a>
+</footer>
+
+</body>
+</html>
