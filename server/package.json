@@ -1,0 +1,16 @@
+{
+  "name": "potocki-server",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "ejs": "^6.0.1",
+    "knex": "^3.2.10",
+    "nanoid": "^3.3.7",
+    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.51.0"
+  }
+}

@@ -1,0 +1,35 @@
+# potocki - Caddy reverse proxy config
+# Replace potocki.example.com with your actual domain
+
+potocki.example.com {
+    reverse_proxy localhost:3000
+
+    # Allow uploads up to 500MB (matches server MAX_SIZE)
+    request_body {
+        max_size 500MB
+    }
+
+    # Optional: enable compression for HTML responses
+    encode gzip zstd
+
+    # Optional: add security headers
+    header {
+        # Prevent MIME sniffing
+        X-Content-Type-Options "nosniff"
+        # Referrer policy
+        Referrer-Policy "no-referrer"
+        # XSS protection (legacy browsers)
+        X-XSS-Protection "1; mode=block"
+        # Remove server header
+        -Server
+    }
+
+    # Optional: rate limiting at edge (additional protection)
+    # rate_limit {
+    #     zone potocki {
+    #         key    {remote_host}
+    #         events 100
+    #         window 1m
+    #     }
+    # }
+}

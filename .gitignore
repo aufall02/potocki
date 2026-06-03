@@ -1,0 +1,16 @@
+node_modules/
+data/
+*.enc
+*.xz
+*.raw
+*.aab
+*.pdf
+*.txt
+.env
+*.log
+.DS_Store
+server/public/bin/
+# client binaries
+client/potocki
+client/potocki-*
+client/fdrop*
