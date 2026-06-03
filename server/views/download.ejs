@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>potocki :: download</title>
+<style>
+  :root {
+    --brand: #cc4a2c;
+    --brand-dark: #b33e22;
+    --brand-light: #fbeae5;
+    --text-main: #333333;
+    --text-muted: #666666;
+    --bg-main: #f8f9fa;
+    --bg-card: #ffffff;
+    --border: #e0e0e0;
+    --border-brand: #f48b71;
+    --mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--sans); color: var(--text-main); background: var(--bg-main); line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; }
+  
+  /* Navbar */
+  .navbar { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background: var(--brand); color: #fff; }
+  .navbar .logo { font-size: 1.5em; font-weight: 700; display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; text-decoration: none; color: #fff; }
+  .navbar .logo::before { content: "📦"; font-size: 1.2em; }
+  
+  /* Container */
+  .container { max-width: 700px; margin: 60px auto; flex: 1; width: 100%; padding: 0 20px; }
+  
+  /* Card */
+  .card { background: var(--bg-card); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
+  .card-header { background: var(--brand-light); padding: 20px 30px; border-bottom: 1px solid var(--border-brand); }
+  .card-header h2 { font-size: 1.4em; font-weight: 800; color: var(--brand-dark); display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px; }
+  
+  .card-body { padding: 30px; }
+  
+  /* Info rows */
+  .info-grid { display: grid; grid-template-columns: 140px 1fr; gap: 15px; margin-bottom: 30px; }
+  .info-label { font-size: 0.9em; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; padding-top: 2px; }
+  .info-value { font-size: 1.05em; color: var(--text-main); word-break: break-all; font-weight: 500; }
+  .info-value.mono { font-family: var(--mono); font-size: 0.95em; font-weight: 600; color: var(--brand-dark); }
+  .pct { color: #f57c00; font-weight: 700; }
+  
+  .sha-box { background: var(--bg-main); padding: 15px; border-radius: 6px; border: 1px dashed var(--border); margin-top: 20px; }
+  .sha-box .label { font-size: 0.8em; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
+  .sha-box .value { font-family: var(--mono); font-size: 0.85em; color: var(--text-main); word-break: break-all; }
+  
+  /* Auth section */
+  .auth-section { border-top: 1px solid var(--border); padding-top: 30px; }
+  .auth-section h3 { font-size: 1.2em; font-weight: 700; margin-bottom: 10px; color: var(--text-main); letter-spacing: -0.5px; }
+  .input-group { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  input[type=text] { flex: 1; min-width: 200px; padding: 12px 15px; border: 1px solid var(--border); border-radius: 4px; font-size: 1em; font-family: var(--mono); transition: all 0.2s; }
+  input[type=text]:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-light); }
+  input[type=text]::placeholder { color: #aaa; }
+  
+  .btn { background: var(--brand); color: #fff; border: none; padding: 12px 24px; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 1em; transition: background 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
+  .btn:hover { background: var(--brand-dark); }
+  
+  /* Commands */
+  .commands { display: none; background: #2d2d2d; padding: 25px; border-radius: 8px; margin-top: 20px; color: #fff; animation: fadeIn 0.3s; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+  .commands h3 { font-size: 1.1em; font-weight: 600; margin-bottom: 15px; color: #fff; border-bottom: 1px solid #444; padding-bottom: 10px; letter-spacing: 0.5px; }
+  .commands p { font-size: 0.9em; color: #aaa; margin-bottom: 8px; font-weight: 500; }
+  .cmd-box { background: #1a1a1a; border: 1px solid #444; padding: 15px; border-radius: 4px; font-family: var(--mono); font-size: 0.9em; color: #f8f8f8; word-break: break-all; cursor: pointer; position: relative; margin-bottom: 15px; transition: border-color 0.2s; }
+  .cmd-box:hover { border-color: #777; }
+  .cmd-box::before { content: "$ "; color: var(--brand); font-weight: bold; }
+  .cmd-box .copy-hint { position: absolute; top: 12px; right: 15px; font-size: 0.8em; color: #888; text-transform: uppercase; font-weight: bold; }
+  
+  .client-link { margin-top: 20px; font-size: 0.9em; text-align: center; }
+  .client-link a { color: var(--brand); text-decoration: none; font-weight: 600; background: #fff; padding: 6px 15px; border-radius: 20px; display: inline-block; margin-top: 10px; transition: transform 0.2s; color: var(--text-main); }
+  .client-link a:hover { transform: scale(1.05); }
+  
+  .back-link { text-align: center; margin-top: 30px; font-weight: 600; }
+  .back-link a { color: var(--brand); text-decoration: none; transition: color 0.2s; }
+  .back-link a:hover { color: var(--brand-dark); text-decoration: underline; }
+  
+  /* Footer */
+  footer { text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.9em; border-top: 1px solid var(--border); margin-top: auto; background: #fff; }
+  
+  @media (max-width: 600px) {
+    .info-grid { grid-template-columns: 1fr; gap: 5px; }
+    .info-label { padding-top: 10px; }
+    .navbar { padding: 15px 20px; }
+  }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="navbar">
+  <a href="/" class="logo">potocki</a>
+</div>
+
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <h2>↓ Download File</h2>
+    </div>
+    <div class="card-body">
+      <div class="info-grid">
+        <div class="info-label">Filename</div>
+        <div class="info-value mono"><%- name %></div>
+        
+        <div class="info-label">Size</div>
+        <div class="info-value"><%- sizeStr %> <span style="color:var(--text-muted); font-size:0.9em;">(compressed: <%- compSizeStr %>)</span></div>
+        
+        <div class="info-label">Expires</div>
+        <div class="info-value"><%- expiresDate %></div>
+        
+        <div class="info-label">Bandwidth</div>
+        <div class="info-value"><span class="pct"><%- bwPercent %>%</span> used</div>
+      </div>
+      
+      <% if (sha256) { %>
+      <div class="sha-box">
+        <div class="label">SHA-256 Checksum</div>
+        <div class="value"><%- sha256 %></div>
+      </div>
+      <% } %>
+      
+      <div class="auth-section">
+        <h3>Authentication Required</h3>
+        <p style="color: var(--text-muted); margin-bottom: 15px; font-size: 0.95em;">Enter the secret token provided by the sender to reveal download commands.</p>
+        <div class="input-group">
+          <input type="text" id="token" placeholder="fd_xxxxx..." autocomplete="off">
+          <button class="btn" onclick="reveal()">Reveal Commands</button>
+        </div>
+      </div>
+      
+      <div class="commands" id="commands">
+        <h3>Download Instructions</h3>
+        <p>1. Download & decrypt safely with potocki:</p>
+        <div class="cmd-box" id="cmdClient" onclick="copyCmd(this)"><span class="copy-hint">copy</span></div>
+        
+        <p>2. Or download the encrypted raw file directly:</p>
+        <div class="cmd-box" id="cmdCurl" onclick="copyCmd(this)"><span class="copy-hint">copy</span></div>
+        
+        <div class="client-link">
+          Need the client? <br>
+          <a href="<%- baseUrl %>/bin">Download potocki (Linux AMD64)</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="back-link">
+    <a href="/">&larr; Back to Upload</a>
+  </div>
+</div>
+
+<footer>
+  &copy; 2026 potocki &middot; Encrypted &middot; Compressed &middot; Temporary
+</footer>
+
+<script>
+var ORIGIN = "<%- baseUrl %>";
+var FID = "<%- fid %>";
+var FNAME = "<%- name %>";
+
+function reveal(){
+  var t = document.getElementById('token').value.trim();
+  if (!t) { alert('Please enter your secret token first.'); return; }
+  t = t.replace(/[<>"'&]/g, function(c) { return {'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'}[c]; });
+  document.getElementById('commands').style.display = 'block';
+  document.getElementById('cmdClient').innerHTML = 'potocki ' + ORIGIN + '/d/' + FID + ' ' + t + '<span class="copy-hint">copy</span>';
+  document.getElementById('cmdCurl').innerHTML = 'curl -o ' + FID + '.enc "' + ORIGIN + '/dl/' + FID + '?token=' + t + '"<span class="copy-hint">copy</span>';
+}
+
+function copyCmd(el) {
+  var t = el.innerText.replace('copy','').trim();
+  navigator.clipboard.writeText(t).catch(function(){});
+  var h = el.querySelector('.copy-hint');
+  if (h) { h.textContent = 'copied'; setTimeout(function() { h.textContent = 'copy'; }, 1500); }
+}
+</script>
+</body>
+</html>

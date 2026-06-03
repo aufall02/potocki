@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>potocki :: <%= version %></title>
+<style>
+  :root {
+    --brand: #cc4a2c;
+    --brand-dark: #b33e22;
+    --brand-light: #fbeae5;
+    --text-main: #333333;
+    --text-muted: #666666;
+    --bg-main: #ffffff;
+    --bg-muted: #f8f9fa;
+    --border: #e0e0e0;
+    --border-brand: #f48b71;
+    --mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--sans); color: var(--text-main); background: var(--bg-main); line-height: 1.6; }
+  
+  /* Navbar */
+  .navbar { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background: var(--brand); color: #fff; }
+  .navbar .logo { font-size: 1.5em; font-weight: 700; display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; }
+  .navbar .logo::before { content: "📦"; font-size: 1.2em; }
+  .navbar .nav-links { display: flex; gap: 20px; align-items: center; }
+  .nav-item { color: #fff; text-decoration: none; font-size: 0.9em; cursor: pointer; opacity: 0.9; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+  .nav-item:hover, .nav-item.active { opacity: 1; font-weight: 700; }
+  .nav-item.btn-outline { border: 1px solid #fff; padding: 8px 16px; border-radius: 4px; transition: background 0.2s, color 0.2s; }
+  .nav-item.btn-outline:hover { background: #fff; color: var(--brand); }
+  
+  /* Hero Section */
+  .hero { background: var(--brand); color: #fff; text-align: center; padding: 60px 20px 100px; }
+  .hero h1 { font-size: 3.5em; font-weight: 800; margin-bottom: 20px; max-width: 800px; margin-left: auto; margin-right: auto; line-height: 1.1; letter-spacing: -1px; }
+  .hero p { font-size: 1.25em; opacity: 0.95; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; }
+  
+  /* Upload Card (Inside Hero or just below) */
+  .upload-container { max-width: 500px; margin: -60px auto 60px; background: #fff; border-radius: 8px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); padding: 30px; color: var(--text-main); position: relative; z-index: 10; }
+  .dropzone { border: 2px dashed var(--border-brand); border-radius: 8px; padding: 25px 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--brand-light); }
+  .dropzone:hover, .dropzone.dragover { background: #fae1da; border-color: var(--brand); }
+  .dropzone .arrow { color: var(--brand); font-size: 2em; margin-bottom: 5px; font-weight: 300; }
+  .dropzone .text { font-size: 1.1em; font-weight: 700; color: var(--brand-dark); letter-spacing: 0.5px; }
+  .dropzone .hint { color: var(--text-muted); font-size: 0.9em; margin-top: 10px; }
+  #fileInput { display: none; }
+  
+  .filename-edit, .progress-wrap, .result, .error-box { display: none; }
+  .filename-edit label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+  .filename-edit input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 4px; font-size: 1.1em; margin-bottom: 20px; font-family: var(--mono); transition: all 0.2s; }
+  .filename-edit input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-light); }
+  .btn-row { display: flex; gap: 10px; }
+  .btn { background: var(--brand); color: #fff; border: none; padding: 14px 28px; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 1em; transition: background 0.2s; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn:hover { background: var(--brand-dark); }
+  .btn-cancel { background: #fff; color: var(--text-main); border: 1px solid var(--border); }
+  .btn-cancel:hover { background: var(--bg-muted); }
+  
+  .progress-wrap { background: var(--bg-muted); padding: 25px; border-radius: 8px; border: 1px solid var(--border); }
+  .progress-wrap .label { display: flex; justify-content: space-between; margin-bottom: 15px; font-weight: 600; font-size: 1.1em; }
+  .progress-bar { height: 12px; background: var(--border); border-radius: 6px; overflow: hidden; }
+  .progress-bar .fill { height: 100%; background: var(--brand); width: 0%; transition: width 0.3s ease; }
+  
+  .error-box { background: #fee; border: 1px solid #fcc; color: #c00; padding: 15px; border-radius: 6px; margin-top: 20px; font-weight: 500; }
+  
+  .result .field { margin-bottom: 20px; }
+  .result .label { font-size: 0.85em; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+  .result .value { background: var(--bg-muted); padding: 12px 15px; border-radius: 4px; font-family: var(--mono); border: 1px solid var(--border); word-break: break-all; }
+  .result .value a { color: var(--brand); font-weight: 600; text-decoration: none; }
+  .result .value a:hover { text-decoration: underline; }
+  .result .value.token { color: #d32f2f; font-weight: 700; background: #fbeae5; border-color: #f48b71; font-size: 1.1em; }
+  .cmd-box { background: #2d2d2d; color: #f8f8f8; padding: 15px; border-radius: 4px; font-family: var(--mono); font-size: 0.95em; cursor: pointer; position: relative; }
+  .cmd-box:hover { background: #1a1a1a; }
+  .cmd-box .copy-hint { position: absolute; top: 12px; right: 15px; font-size: 0.8em; color: #888; text-transform: uppercase; }
+  
+  /* Features Section */
+  .section-container { max-width: 1100px; margin: 80px auto; padding: 0 20px; }
+  .section-title { font-size: 2.2em; font-weight: 800; margin-bottom: 40px; color: var(--text-main); letter-spacing: -0.5px; }
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+  .feature-card { border: 1px solid var(--border-brand); border-radius: 8px; padding: 30px; transition: transform 0.2s, box-shadow 0.2s; background: #fff; }
+  .feature-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(204, 74, 44, 0.1); }
+  .feature-icon { font-size: 1.8em; color: var(--brand); margin-bottom: 15px; }
+  .feature-card h4 { font-size: 1.2em; font-weight: 600; margin-bottom: 10px; }
+  .feature-card p { font-size: 0.95em; color: var(--text-muted); line-height: 1.5; }
+  
+  /* Stats Section (Trusted by many) */
+  .stats-section { background: var(--brand-dark); color: #fff; padding: 80px 20px; margin-top: 60px; }
+  .stats-inner { max-width: 1100px; margin: 0 auto; }
+  .stats-title { font-size: 2.2em; font-weight: 800; margin-bottom: 20px; letter-spacing: -0.5px; }
+  .stats-subtitle { font-size: 1.2em; opacity: 0.9; margin-bottom: 50px; max-width: 800px; line-height: 1.6; }
+  .stats-grid { display: flex; flex-wrap: wrap; gap: 15px; }
+  .stat-tile { background: rgba(255,255,255,0.15); padding: 20px 25px; border-radius: 8px; min-width: 150px; border: 1px solid rgba(255,255,255,0.2); }
+  .stat-val { font-size: 2.2em; font-weight: 700; font-family: var(--mono); }
+  .stat-lbl { font-size: 0.85em; text-transform: uppercase; opacity: 0.8; margin-top: 5px; font-family: var(--sans); letter-spacing: 0.5px; font-weight: 600; }
+  
+  /* Alternative Info Section (like "Still using Linux cron jobs?") */
+  .info-banner { max-width: 1100px; margin: 60px auto; background: #e3f2fd; border: 1px solid #bbdefb; border-radius: 8px; padding: 25px 30px; display: flex; gap: 20px; align-items: center; color: #0d47a1; }
+  .info-banner .icon { font-size: 1.5em; color: #1976d2; }
+  .info-banner h4 { margin-bottom: 5px; font-size: 1.1em; font-weight: 600; }
+  .info-banner p { font-size: 0.95em; margin: 0; color: #1565c0; }
+  .info-banner a { color: var(--brand); font-weight: 600; text-decoration: none; }
+  .info-banner a:hover { text-decoration: underline; }
+
+  /* Tab Content Handling */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; animation: fadeIn 0.3s; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  
+  /* Docs / Tutorial / FAQ styles */
+  .docs-content { max-width: 900px; margin: 0 auto; padding: 60px 20px; }
+  .docs-content h2 { font-size: 2.2em; font-weight: 800; margin-bottom: 30px; padding-bottom: 10px; color: var(--text-main); letter-spacing: -0.5px; }
+  .docs-content h3 { font-size: 1.4em; font-weight: 600; margin: 40px 0 15px; color: var(--text-main); }
+  .docs-content p, .docs-content li { font-size: 1.1em; color: var(--text-muted); margin-bottom: 15px; line-height: 1.7; }
+  .docs-content ul { padding-left: 20px; margin-bottom: 20px; }
+  .code-block { background: #1e1e1e; color: #d4d4d4; padding: 25px; border-radius: 8px; font-family: var(--mono); font-size: 0.95em; overflow-x: auto; margin: 20px 0; line-height: 1.6; white-space: pre-wrap; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+  .code-block .cmd { color: #569cd6; }
+  .code-block .str { color: #ce9178; }
+  .code-block .comment { color: #6a9955; }
+  code { background: var(--bg-muted); padding: 2px 6px; border-radius: 4px; font-family: var(--mono); font-size: 0.9em; border: 1px solid var(--border); color: var(--brand-dark); }
+  
+  /* Footer */
+  footer { max-width: 1100px; margin: 0 auto; padding: 40px 20px; color: var(--text-muted); font-size: 0.9em; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+  .footer-links { display: flex; gap: 20px; }
+  footer a { color: var(--brand); text-decoration: none; font-weight: 500; }
+  footer a:hover { text-decoration: underline; }
+  .footer-logo { font-size: 1.5em; font-weight: 700; color: var(--brand-dark); display: flex; align-items: center; gap: 5px; }
+  .footer-logo::before { content: "📦"; font-size: 1.2em; color: var(--brand); }
+  
+  @media (max-width: 768px) {
+    .navbar { flex-direction: column; gap: 15px; padding: 15px; }
+    .hero h1 { font-size: 2.2em; }
+    .upload-container { margin: 20px; padding: 20px; }
+    .stats-grid { flex-direction: column; }
+    footer { flex-direction: column; text-align: center; justify-content: center; }
+  }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="navbar">
+  <div class="logo">potocki</div>
+  <div class="nav-links">
+    <a class="nav-item active" data-tab="upload">Upload</a>
+    <a class="nav-item" data-tab="tutorial">Tutorial</a>
+    <a class="nav-item" data-tab="docs">Docs</a>
+    <a class="nav-item btn-outline" data-tab="stats">Live Stats</a>
+  </div>
+</div>
+
+<div class="tab-content active" id="tab-upload">
+  <div class="hero">
+    <h1>Secure, encrypted file drop service.</h1>
+    <p>Upload your files securely. Encrypted in the browser, compressed, and auto-expiring. Absolutely free.</p>
+  </div>
+
+  <div class="upload-container">
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="fileInput">
+      <div class="arrow">↓</div>
+      <div class="text">START UPLOAD</div>
+      <div class="hint">max 500MB &middot; xz + AES-256-CBC</div>
+    </div>
+
+    <div class="filename-edit" id="filenameEdit">
+      <label>Filename</label>
+      <input type="text" id="filenameInput" placeholder="myfile.pdf">
+      <div class="btn-row">
+        <button class="btn" id="btnUpload">Upload Now &gt;</button>
+        <button class="btn btn-cancel" id="btnCancel">Cancel</button>
+      </div>
+    </div>
+
+    <div class="progress-wrap" id="progress">
+      <div class="label">
+        <span>Uploading: <span id="progressName" style="color:var(--text-main)"></span></span>
+        <span class="pct" id="progressPct" style="color:var(--brand)">0%</span>
+      </div>
+      <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
+    </div>
+
+    <div class="error-box" id="error"></div>
+
+    <div class="result" id="result">
+      <div class="field">
+        <div class="label">Download URL</div>
+        <div class="value"><a id="resultUrl" href="" target="_blank"></a></div>
+      </div>
+      <div class="field">
+        <div class="label">Secret Token (Do not share URL and Token together)</div>
+        <div class="value token" id="resultToken"></div>
+      </div>
+      <div class="field">
+        <div class="label">SHA-256 Checksum</div>
+        <div class="value" id="resultSha256" style="font-size:0.85em;color:var(--text-muted)"></div>
+      </div>
+      <div class="field">
+        <div class="label">Download Command (potocki)</div>
+        <div class="cmd-box" id="cmdClient" onclick="copyCmd(this)"><span class="copy-hint">copy</span></div>
+      </div>
+      <div class="field">
+        <div class="label">Expires At</div>
+        <div class="value" id="resultExpires"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-container">
+    <h2 class="section-title">Features</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <h4>Strong Encryption</h4>
+        <p>Files are encrypted via AES-256-CBC before storage, ensuring total data privacy.</p>
+      </div>
+      <div class="feature-card">
+        <h4>High Compression</h4>
+        <p>Uses xz / lzma2 for high-ratio compression saving bandwidth. Decompressed on client.</p>
+      </div>
+      <div class="feature-card">
+        <h4>Checksum Verified</h4>
+        <p>SHA-256 checksum is verified automatically after the download completes.</p>
+      </div>
+      <div class="feature-card">
+        <h4>Auto-Expire</h4>
+        <p>Files are securely deleted after 7 days or upon reaching the download quota.</p>
+      </div>
+      <div class="feature-card">
+        <h4>CLI Client</h4>
+        <p>Execute your downloads via our streamlined CLI tool directly in the terminal.</p>
+      </div>
+      <div class="feature-card">
+        <h4>Live Analytics</h4>
+        <p>View the history of job executions and live platform statistics on our dashboard.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-section">
+    <div class="stats-inner">
+      <h2 class="stats-title">Trusted by many.</h2>
+      <p class="stats-subtitle">potocki provides a secure, reliable, and temporary way to transfer your sensitive files. We keep your data safe and strictly encrypted from end to end.</p>
+      
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-tile">
+          <div class="stat-val" id="statUploadsH">&mdash;</div>
+          <div class="stat-lbl">users / uploads</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-val" id="statActiveH">&mdash;</div>
+          <div class="stat-lbl">active files</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-val" id="statInH">&mdash;</div>
+          <div class="stat-lbl">data in</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-val" id="statOutH">&mdash;</div>
+          <div class="stat-lbl">data out in the last 24 hours</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="tab-content" id="tab-tutorial">
+  <div class="docs-content">
+    <h2>Tutorial &mdash; Getting Started</h2>
+    
+    <h3>1. Install Server</h3>
+    <p>Requirements: Node.js 18+, npm, xz-utils</p>
+    <div class="code-block"><span class="comment"># install system deps</span>
+<span class="cmd">sudo apt install</span> nodejs npm xz-utils build-essential
+
+<span class="comment"># clone &amp; install</span>
+<span class="cmd">cd</span> /opt
+<span class="cmd">git clone</span> https://github.com/your/potocki
+<span class="cmd">cd</span> potocki/server
+<span class="cmd">npm install</span>
+<span class="cmd">npm start</span></div>
+
+    <h3>2. Setup Caddy (HTTPS + Reverse Proxy)</h3>
+    <div class="code-block"><span class="comment"># install caddy (see caddyserver.com for your distro)</span>
+
+<span class="comment"># /etc/caddy/Caddyfile:</span>
+potocki.example.com {
+    reverse_proxy localhost:3000
+    request_body { max_size 500MB }
+}
+
+<span class="cmd">sudo systemctl reload</span> caddy</div>
+
+    <h3>3. Upload a File</h3>
+    <p>Via web: Drop file in the upload tab. Via curl:</p>
+    <div class="code-block"><span class="cmd">curl</span> -X POST \
+  -H <span class="str">"X-Filename: report.pdf"</span> \
+  --data-binary @report.pdf \
+  https://potocki.example.com/upload</div>
+    <p>Response is JSON with id, token, sha-256, expiry. Share the URL &amp; token with your recipient.</p>
+
+    <h3>4. Download with potocki</h3>
+    <div class="code-block"><span class="comment"># get the client</span>
+<span class="cmd">curl</span> -O https://potocki.example.com/bin
+<span class="cmd">chmod</span> +x potocki-linux-amd64
+<span class="cmd">mv</span> potocki-linux-amd64 potocki
+
+<span class="comment"># download &amp; decrypt (saves to current dir)</span>
+<span class="cmd">./potocki</span> https://potocki.example.com/d/abc123 fd_xxx...
+
+<span class="comment"># to a specific directory</span>
+<span class="cmd">./potocki</span> -o ~/Downloads https://potocki.example.com/d/abc123 fd_xxx...</div>
+
+    <h3>5. Download with curl (Raw Encrypted)</h3>
+    <p>If you don't have the client, you can download the raw AES-256-CBC encrypted file directly via curl:</p>
+    <div class="code-block"><span class="cmd">curl</span> -o abc123_encrypted.enc "https://potocki.example.com/dl/abc123?token=fd_xxx..."</div>
+  </div>
+</div>
+
+<div class="tab-content" id="tab-docs">
+  <div class="docs-content">
+    <h2>Frequently Asked Questions (FAQ) / API</h2>
+    
+    <h3>How much is the service of potocki?</h3>
+    <p>Our service is entirely free of charge.</p>
+
+    <h3>Is my user data safe with you?</h3>
+    <p>Our promise: We do not share user data with third parties. Your files are encrypted using state-of-the-art encryption mechanisms (AES-256-CBC) prior to storage.</p>
+
+    <h3>API Endpoints</h3>
+    <ul>
+      <li><code>POST /upload</code> &mdash; Upload file (header: <code>X-Filename</code>, body: raw bytes)</li>
+      <li><code>GET /d/:id</code> &mdash; Download page (HTML)</li>
+      <li><code>GET /dl/:id?token=</code> &mdash; Stream encrypted file</li>
+      <li><code>GET /api/info/:id</code> &mdash; File metadata JSON</li>
+      <li><code>GET /api/key/:id?token=</code> &mdash; Get decryption key (requires token)</li>
+      <li><code>GET /api/stats</code> &mdash; Server statistics JSON</li>
+      <li><code>GET /bin</code> &mdash; Download potocki client binary</li>
+    </ul>
+
+    <h3>Upload Response</h3>
+    <div class="code-block">{
+  <span class="str">"id"</span>: <span class="str">"abc123"</span>,
+  <span class="str">"token"</span>: <span class="str">"fd_xxx..."</span>,
+  <span class="str">"name"</span>: <span class="str">"report.pdf"</span>,
+  <span class="str">"size"</span>: 1048576,
+  <span class="str">"compSize"</span>: 524288,
+  <span class="str">"sha256"</span>: <span class="str">"e3b0c44..."</span>,
+  <span class="str">"expires"</span>: 1781048400000,
+  <span class="str">"url"</span>: <span class="str">"/d/abc123"</span>
+}</div>
+
+    <h3>Retention Policy</h3>
+    <ul>
+      <li>Files &lt; 10MB &rarr; 3 GB download bandwidth</li>
+      <li>Files &lt; 500MB &rarr; 10 GB download bandwidth</li>
+      <li>Files &ge; 500MB &rarr; 15 GB download bandwidth</li>
+      <li>All files expire after 7 days</li>
+    </ul>
+  </div>
+</div>
+
+<div class="tab-content" id="tab-stats">
+  <div class="docs-content">
+    <h2>Live Statistics</h2>
+    <div style="margin-bottom: 20px; font-size: 0.9em; color: var(--text-muted); display: flex; align-items: center; gap: 15px;">
+      <span id="statsAge">last update: never</span>
+      <button class="btn btn-cancel" style="padding: 6px 12px; font-size: 0.9em;" onclick="refreshStats()">Refresh</button>
+    </div>
+    
+    <div class="features-grid" style="margin-bottom: 40px;">
+      <div class="feature-card" style="text-align: center; border-color: var(--brand);">
+        <div style="font-size: 2.5em; font-weight: 700; color: var(--brand);" id="statUploads">&mdash;</div>
+        <div style="font-size: 0.85em; text-transform: uppercase; color: var(--text-muted); margin-top: 5px; font-weight: 600;">Total Uploads</div>
+      </div>
+      <div class="feature-card" style="text-align: center;">
+        <div style="font-size: 2.5em; font-weight: 700; color: #4CAF50;" id="statActive">&mdash;</div>
+        <div style="font-size: 0.85em; text-transform: uppercase; color: var(--text-muted); margin-top: 5px; font-weight: 600;">Active Files</div>
+      </div>
+      <div class="feature-card" style="text-align: center;">
+        <div style="font-size: 2.5em; font-weight: 700; color: #FF9800;" id="statProcessing">&mdash;</div>
+        <div style="font-size: 0.85em; text-transform: uppercase; color: var(--text-muted); margin-top: 5px; font-weight: 600;">Processing</div>
+      </div>
+      <div class="feature-card" style="text-align: center;">
+        <div style="font-size: 2.5em; font-weight: 700; color: #9C27B0;" id="statQueue">&mdash;</div>
+        <div style="font-size: 0.85em; text-transform: uppercase; color: var(--text-muted); margin-top: 5px; font-weight: 600;">Queue Depth</div>
+      </div>
+    </div>
+    
+    <h3 style="margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 10px;">Bandwidth & Storage</h3>
+    <div class="features-grid">
+      <div class="feature-card">
+        <h4 style="color: var(--text-muted); margin-bottom: 15px;">Data In</h4>
+        <div style="font-size: 1.8em; font-weight: 700; font-family: var(--mono);" id="statIn">&mdash;</div>
+      </div>
+      <div class="feature-card">
+        <h4 style="color: var(--text-muted); margin-bottom: 15px;">Data Out</h4>
+        <div style="font-size: 1.8em; font-weight: 700; font-family: var(--mono);" id="statOut">&mdash;</div>
+      </div>
+      <div class="feature-card">
+        <h4 style="color: var(--text-muted); margin-bottom: 15px;">Compressed Storage</h4>
+        <div style="font-size: 1.8em; font-weight: 700; font-family: var(--mono);" id="statCompressed">&mdash;</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">potocki</div>
+  <div>&copy; 2026 potocki</div>
+  <div class="footer-links">
+    <a href="#">Terms of Service</a>
+    <a href="https://github.com/your-username/potocki/issues" target="_blank" rel="noopener noreferrer">Report Bug</a>
+  </div>
+  <div>Version <%= version %></div>
+</footer>
+
+<script>
+var dropzone = document.getElementById('dropzone');
+var fileInput = document.getElementById('fileInput');
+var filenameEdit = document.getElementById('filenameEdit');
+var filenameInput = document.getElementById('filenameInput');
+var btnUpload = document.getElementById('btnUpload');
+var btnCancel = document.getElementById('btnCancel');
+var progressWrap = document.getElementById('progress');
+var progressFill = document.getElementById('progressFill');
+var progressPct = document.getElementById('progressPct');
+var progressName = document.getElementById('progressName');
+var resultDiv = document.getElementById('result');
+var errorDiv = document.getElementById('error');
+var MAX_MB = 500;
+var selectedFile = null;
+
+document.querySelectorAll('.nav-item').forEach(function(tab) {
+  tab.addEventListener('click', function(e) {
+    if (tab.dataset.tab) {
+      e.preventDefault();
+      document.querySelectorAll('.nav-item').forEach(function(t) { t.classList.remove('active'); });
+      document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+      tab.classList.add('active');
+      if (tab.classList.contains('btn-outline')) {
+        tab.classList.add('active'); // just keep style if needed
+      }
+      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+      if (tab.dataset.tab === 'stats') refreshStats();
+      window.scrollTo(0,0);
+    }
+  });
+});
+
+dropzone.addEventListener('click', function() { fileInput.click(); });
+dropzone.addEventListener('dragover', function(e) { e.preventDefault(); dropzone.classList.add('dragover'); });
+dropzone.addEventListener('dragleave', function() { dropzone.classList.remove('dragover'); });
+dropzone.addEventListener('drop', function(e) {
+  e.preventDefault(); dropzone.classList.remove('dragover');
+  if (e.dataTransfer.files.length) showFilenameEdit(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', function() {
+  if (fileInput.files.length) showFilenameEdit(fileInput.files[0]);
+});
+
+function showFilenameEdit(file) {
+  if (file.size > MAX_MB * 1024 * 1024) { showError('File too large (max ' + MAX_MB + 'MB)'); return; }
+  hideError();
+  selectedFile = file;
+  filenameInput.value = file.name;
+  dropzone.style.display = 'none';
+  filenameEdit.style.display = 'block';
+  resultDiv.style.display = 'none';
+}
+
+btnUpload.addEventListener('click', function() {
+  if (!selectedFile) return;
+  var name = filenameInput.value.trim();
+  if (!name) return;
+  hideError();
+  filenameEdit.style.display = 'none';
+  progressWrap.style.display = 'block';
+  resultDiv.style.display = 'none';
+  progressName.textContent = name;
+  progressFill.style.width = '0%';
+  progressPct.textContent = '0%';
+  uploadFile(selectedFile, name);
+});
+
+btnCancel.addEventListener('click', function() {
+  selectedFile = null;
+  filenameEdit.style.display = 'none';
+  dropzone.style.display = 'block';
+  fileInput.value = '';
+});
+
+function uploadFile(file, filename) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', '/upload');
+  xhr.setRequestHeader('X-Filename', encodeURIComponent(filename));
+  xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+  xhr.upload.onprogress = function(e) {
+    if (e.lengthComputable) { var pct = Math.round((e.loaded / e.total) * 100); progressFill.style.width = pct + '%'; progressPct.textContent = pct + '%'; }
+  };
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      try { showResult(JSON.parse(xhr.responseText)); } catch { showError('Invalid server response'); }
+    } else {
+      try { showError(JSON.parse(xhr.responseText).error || 'Upload failed'); } catch { showError('Upload failed'); }
+    }
+  };
+  xhr.onerror = function() { showError('Network error'); };
+  xhr.send(file);
+}
+
+function showResult(data) {
+  progressWrap.style.display = 'none'; resultDiv.style.display = 'block';
+  var url = window.location.origin + data.url;
+  document.getElementById('resultUrl').href = url; document.getElementById('resultUrl').textContent = url;
+  document.getElementById('resultToken').textContent = data.token;
+  document.getElementById('resultSha256').textContent = data.sha256;
+  document.getElementById('cmdClient').innerHTML = 'potocki ' + url + ' ' + data.token + '<span class="copy-hint">copy</span>';
+  document.getElementById('resultExpires').textContent = new Date(data.expires).toLocaleString();
+}
+
+function showError(msg) { errorDiv.textContent = msg; errorDiv.style.display = 'block'; dropzone.style.display = 'block'; filenameEdit.style.display = 'none'; progressWrap.style.display = 'none'; }
+function hideError() { errorDiv.style.display = 'none'; }
+function copyCmd(el) {
+  var t = el.innerText.replace('copy','').trim(); navigator.clipboard.writeText(t).catch(function(){});
+  var h = el.querySelector('.copy-hint'); if (h) { h.textContent = 'copied'; setTimeout(function() { h.textContent = 'copy'; }, 1500); }
+}
+
+function refreshStats() {
+  fetch('/api/stats').then(function(r) { return r.json(); }).then(function(s) {
+    var vUploads = s.totalUploads;
+    var vActive = s.activeFiles;
+    var vProcessing = s.processing;
+    var vQueue = s.queueActive + '/' + s.queueCapacity + (s.queuePending > 0 ? ' (+' + s.queuePending + ')' : '');
+    var vIn = s.bytesUploadedFmt;
+    var vOut = s.bytesDownloadedFmt;
+    var vComp = s.bytesCompressedFmt;
+    
+    // Detailed stats tab
+    document.getElementById('statUploads').textContent = vUploads;
+    document.getElementById('statActive').textContent = vActive;
+    document.getElementById('statProcessing').textContent = vProcessing;
+    document.getElementById('statQueue').textContent = vQueue;
+    document.getElementById('statIn').textContent = vIn;
+    document.getElementById('statOut').textContent = vOut;
+    document.getElementById('statCompressed').textContent = vComp;
+    
+    // Hero stats
+    var hUploads = document.getElementById('statUploadsH');
+    if (hUploads) hUploads.textContent = vUploads;
+    var hActive = document.getElementById('statActiveH');
+    if (hActive) hActive.textContent = vActive;
+    var hIn = document.getElementById('statInH');
+    if (hIn) hIn.textContent = vIn;
+    var hOut = document.getElementById('statOutH');
+    if (hOut) hOut.textContent = vOut;
+    
+    document.getElementById('statsAge').textContent = 'last update: ' + new Date().toLocaleTimeString();
+  }).catch(function() { document.getElementById('statsAge').textContent = '[ERR] fetch failed'; });
+}
+
+// Initial fetch for hero stats
+refreshStats();
+setInterval(refreshStats, 30000); // Auto-refresh every 30s
+</script>
+</body>
+</html>
