@@ -40,27 +40,27 @@ A self-hosted, minimal **file drop** service. Files are encrypted with **AES-256
 
 The **Go client** handles decryption and decompression locally, so the server never has to do expensive work on download. Bandwidth stays minimal — only the compressed+encrypted file leaves the server.
 
-### 🤔 Kenapa namanya "potocki"?
+### Kenapa namanya "potocki"?
 
 Nama **potocki** diambil dari karakter di anime
 [*Orb: On the Movements of the Earth*](https://en.wikipedia.org/wiki/Orb:_On_the_Movements_of_the_Earth)
 (Chi. — Chikyuu no Undou ni Tsuite). 
 > 10% dari hasil kompresi akan diberikan kepada Potocki.
-## ✨ Features
+## Features
 
-- 🔒 **AES-256-CBC encryption** — files encrypted before storage
-- 📦 **xz compression** — high-ratio compression (saves bandwidth)
-- ✅ **SHA-256 checksums** — every file verified on download
-- ⏱️ **Auto-expiry** — files deleted after 7 days or bandwidth quota
-- 🌐 **Web UI** — clean modern interface (EJS + vanilla JS)
-- 🖥️ **CLI** — upload via cURL, download via Go client
-- 📊 **Live stats** — uploads, downloads, active files, queue depth
-- 🛡️ **Rate limited** — per-IP protection (20 req/min default)
-- ⚡ **Concurrent** — async xz + bounded queue (no blocking)
-- 🚀 **Fast** — uWebSockets.js backend, Knex query builder
-- 🪶 **Tiny** — 4.7MB Go client, single static binary
+- **AES-256-CBC encryption** — files encrypted before storage
+- **xz compression** — high-ratio compression (saves bandwidth)
+- **SHA-256 checksums** — every file verified on download
+- **Auto-expiry** — files deleted after 7 days or bandwidth quota
+- **Web UI** — clean modern interface (EJS + vanilla JS)
+- **CLI** — upload via cURL, download via Go client
+- **Live stats** — uploads, downloads, active files, queue depth
+- **Rate limited** — per-IP protection (20 req/min default)
+- **Concurrent** — async xz + bounded queue (no blocking)
+- **Fast** — uWebSockets.js backend, Knex query builder
+- **Tiny** — 4.7MB Go client, single static binary
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────┐  POST /upload   ┌──────────────────┐    store     ┌──────────┐
@@ -99,7 +99,7 @@ Nama **potocki** diambil dari karakter di anime
 
 **Server-side cost per download:** zero CPU — just streams the already-encrypted file. All heavy work happens in the Go client.
 
-## 📦 Tech Stack
+## Tech Stack
 
 | Layer | Tech |
 |-------|------|
@@ -113,7 +113,7 @@ Nama **potocki** diambil dari karakter di anime
 | Reverse Proxy | [Caddy](https://caddyserver.com/) |
 | IDs | [nanoid](https://github.com/ai/nanoid) |
 
-## 🚀 Installation
+## Installation
 
 ### 1. Server Setup
 
@@ -175,7 +175,7 @@ chmod +x potocki-linux-amd64
 mv potocki-linux-amd64 potocki
 ```
 
-## 📖 Usage
+## Usage
 
 ### Upload via Web UI
 
@@ -259,7 +259,7 @@ curl -o report.enc "https://potocki.example.com/dl/VKTqV_To?token=fd_xxx"
 # potocki v0.2.0
 ```
 
-## 📊 Monitoring
+## Monitoring
 
 The web UI includes a **Stats** tab with real-time metrics:
 
@@ -296,7 +296,7 @@ curl https://potocki.example.com/api/stats
 }
 ```
 
-## 📡 API
+## API
 
 All endpoints return JSON unless otherwise noted.
 
@@ -311,7 +311,7 @@ All endpoints return JSON unless otherwise noted.
 | `GET` | `/api/stats` | Server statistics |
 | `POST` | `/upload` | Upload a file (header: `X-Filename`, body: raw bytes) |
 
-## ⚙️ Configuration
+## Configuration
 
 All config via environment variables:
 
@@ -328,7 +328,7 @@ Example:
 MAX_CONCURRENT=5 MAX_QUEUE=50 RATE_LIMIT_PER_MIN=100 PORT=8080 npm start
 ```
 
-## 🗄️ Retention
+## Retention
 
 Files are auto-deleted when **any** of these is met:
 
@@ -340,7 +340,7 @@ Files are auto-deleted when **any** of these is met:
 
 The cleanup job runs every 5 minutes.
 
-## 🛡️ Security
+## Security
 
 - **Filename sanitization** — path traversal chars, null bytes, control chars stripped
 - **ID validation** — only `a-zA-Z0-9_-` allowed, max 32 chars
@@ -357,7 +357,7 @@ The cleanup job runs every 5 minutes.
 
 - **Compression ratio varies** — already-compressed files (`.zip`, `.apk`, `.aab`, `.jpg`, `.mp4`) cannot be compressed much further. xz is near-optimal for entropy-encoded data.
 
-## 🛠️ Development
+## Development
 
 ```bash
 # Server with auto-reload
@@ -405,11 +405,11 @@ potocki/
 └── README.md
 ```
 
-## 📜 License
+## License
 
 [MIT](LICENSE) © 2026
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [uWebSockets.js](https://github.com/uNetworking/uWebSockets.js) — insanely fast HTTP server
 - [ulikunitz/xz](https://github.com/ulikunitz/xz) — pure Go xz reader
