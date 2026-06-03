@@ -42,7 +42,7 @@ setInterval(() => {
 
 function compressXz(inputPath) {
   return new Promise((resolve, reject) => {
-    execFile('xz', ['-9', '-c', inputPath], { maxBuffer: 600 * 1024 * 1024, encoding: 'buffer' }, (err, stdout) => {
+    execFile('xz', ['-3', '-c', inputPath], { maxBuffer: 200 * 1024 * 1024, encoding: 'buffer' }, (err, stdout) => {
       if (err) return reject(err);
       resolve(stdout);
     });
@@ -75,7 +75,8 @@ function handleUpload(res, req) {
 
     const rawFilename = decodeURIComponent(req.getHeader('x-filename') || 'untitled');
     const filename = sanitizeFilename(rawFilename);
-    let chunks = [];
+    const tmpPath = path.join(TMP_DIR, `${nanoid(8)}.raw`);
+    let writeStream = null;
     let totalSize = 0;
     let aborted = false;
     let released = false;
@@ -87,23 +88,28 @@ function handleUpload(res, req) {
       }
     };
 
+    const cleanup = () => {
+      if (writeStream) { try { writeStream.close(); } catch {} }
+      try { fs.unlinkSync(tmpPath); } catch {}
+    };
+
     res.onAborted(() => {
       aborted = true;
-      chunks = [];
+      cleanup();
       safeRelease();
     });
 
     res.onData((chunk, isLast) => {
       if (aborted) return;
+
       const arr = new Uint8Array(chunk.byteLength);
       arr.set(new Uint8Array(chunk));
       const buf = Buffer.from(arr.buffer, arr.byteOffset, arr.byteLength);
       totalSize += buf.length;
-      chunks.push(buf);
 
       if (totalSize > MAX_SIZE) {
         aborted = true;
-        chunks = [];
+        cleanup();
         safeRelease();
         try {
           res.cork(() => {
@@ -114,16 +120,34 @@ function handleUpload(res, req) {
         return;
       }
 
-      if (isLast) {
-        const data = Buffer.concat(chunks);
-        chunks = [];
+      // Lazy init write stream on first chunk
+      if (!writeStream) {
+        try {
+          writeStream = fs.createWriteStream(tmpPath);
+        } catch (err) {
+          aborted = true;
+          cleanup();
+          safeRelease();
+          try {
+            res.cork(() => {
+              res.writeStatus('500 Internal Server Error');
+              res.end(JSON.stringify({ error: 'Failed to write temp file' }));
+            });
+          } catch {}
+          return;
+        }
+      }
 
-        setImmediate(() => {
+      writeStream.write(buf);
+
+      if (isLast) {
+        writeStream.end(() => {
           if (aborted) {
+            cleanup();
             safeRelease();
             return;
           }
-          processFile(filename, totalSize, data, res).finally(() => {
+          processFile(filename, totalSize, tmpPath, res).finally(() => {
             safeRelease();
           });
         });
@@ -132,7 +156,7 @@ function handleUpload(res, req) {
   });
 }
 
-async function processFile(filename, originalSize, data, res) {
+async function processFile(filename, originalSize, tmpPath, res) {
   const id = nanoid(8);
   startProcessing(id);
   try {
@@ -141,12 +165,19 @@ async function processFile(filename, originalSize, data, res) {
     const token = generateToken();
     const bwLimit = calculateBwLimit(originalSize);
     const expires = Date.now() + 7 * 24 * 60 * 60 * 1000;
-    const sha256 = crypto.createHash('sha256').update(data).digest('hex');
 
-    const tmpPath = path.join(TMP_DIR, `${id}.raw`);
-    fs.writeFileSync(tmpPath, data);
+    // Hash file from disk instead of memory
+    const sha256 = crypto.createHash('sha256');
+    const hashStream = fs.createReadStream(tmpPath);
+    await new Promise((resolve, reject) => {
+      hashStream.on('data', (d) => sha256.update(d));
+      hashStream.on('end', resolve);
+      hashStream.on('error', reject);
+    });
+    const sha256Hex = sha256.digest('hex');
 
     const compressedData = await compressXz(tmpPath);
+
     try { fs.unlinkSync(tmpPath); } catch {}
 
     const cipher = createCipher(key, iv);
@@ -159,12 +190,12 @@ async function processFile(filename, originalSize, data, res) {
     const created = Date.now();
 
     await insertFile({
-      id, name: filename, size: originalSize, compSize, sha256,
+      id, name: filename, size: originalSize, compSize, sha256: sha256Hex,
       key: key.toString('hex'), iv: iv.toString('hex'), token,
       bwLimit, created, expires,
     });
 
-    console.log(`[upload] ${id}: "${filename}" (${formatBytes(originalSize)} → ${formatBytes(compSize)}) sha256=${sha256.slice(0, 12)}...`);
+    console.log(`[upload] ${id}: "${filename}" (${formatBytes(originalSize)} → ${formatBytes(compSize)}) sha256=${sha256Hex.slice(0, 12)}...`);
     endProcessing(id);
 
     try {
@@ -173,13 +204,14 @@ async function processFile(filename, originalSize, data, res) {
         res.writeHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({
           id, token, name: filename, size: originalSize, compSize,
-          sha256, expires, url: `/d/${id}`,
+          sha256: sha256Hex, expires, url: `/d/${id}`,
         }));
       });
     } catch {}
   } catch (err) {
     console.error('[upload] processFile error:', err.message);
     endProcessing(id);
+    try { fs.unlinkSync(tmpPath); } catch {}
     try {
       res.cork(() => {
         res.writeStatus('500 Internal Server Error');
